@@ -24,7 +24,10 @@ import time
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s (%(filename)s:%(lineno)d) %(levelname)s - %(message)s ",
-    handlers=[logging.StreamHandler()],
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler("scraper.log", mode="a", encoding="utf-8"),
+    ],
 )
 
 logger = logging.getLogger("scraper")
