@@ -161,10 +161,10 @@ save_screenshots = False
 def job():
     global driver, save_screenshots
     # Eigenschaften des heißbegehrten Produkts festlegen
-    product = "Skechers Elite Flex Corriedale 78803 CCL Grey"
-    size = "44"
-    my_limit = 70.00
-    url = "https://www.idealo.de/preisvergleich/OffersOfProduct/200671888_-elite-flex-corriedale-78803-ccl-grey-skechers.html"
+    product = os.getenv("product", "Skechers Elite Flex Corriedale 78803 CCL Grey")
+    size = os.getenv("size", "44")
+    my_limit = float(os.getenv("limit", 100))
+    url = os.getenv("url", "https://www.idealo.de/preisvergleich/OffersOfProduct/200671888_-elite-flex-corriedale-78803-ccl-grey-skechers.html")
 
     firefox_options = webdriver.FirefoxOptions()
     firefox_options.add_argument("--headless")
