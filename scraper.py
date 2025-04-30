@@ -36,46 +36,46 @@ logger = logging.getLogger("scraper")
 def save_screenshot():
     if not save_screenshots:
         return
-    timestamp = time.strftime("%Y%m%dT%H%M%S") + f"{int(time.time() * 1000) % 1000:03d}"
+    timestamp = (
+        time.strftime("%Y%m%dT%H%M%S") + f".{int(time.time() * 1000) % 1000:03d}"
+    )
     location = os.path.join("screenshots", f"{timestamp}.png")
     driver.save_screenshot(location)
-    logger.info(f"Screenshot gespeichert unter {location}")
+    logger.info(f"Screenshot saved under {location}")
 
 
 def open_website(url: str):
-    logger.info(f"Öffnen der Webseite {url}")
+    logger.info(f"Opening the web page {url} ...")
     try:
         driver.get(url)
         save_screenshot()
     except Exception as e:
-        logger.error(f"Fehler beim Öffnen: {e}")
+        logger.error(f"Error opening the web page: {e}")
         close_driver()
         raise
 
 
 def close_driver():
-    logger.info("Beenden des Browser-Treibers ...")
+    logger.info("Closing Firefox driver ...")
     driver.quit()
 
 
 def accept_cookies():
     try:
-        logger.info("Auf das Cookie-Banner warten ...")
-        # Das Cookie-Banner ist ein Shadow-DOM-Element mit der ID "usercentrics-root"
+        logger.info("Waiting for the cookie consent banner ...")
+        # The cookie consent banner lives in a shadow DOM with the ID "usercentrics-cmp-ui"
         host = WebDriverWait(driver, 10).until(
             presence_of_element_located((By.ID, "usercentrics-cmp-ui"))
         )
         root = host.shadow_root
 
         save_screenshot()
-        logger.info(
-            "Prüfen, ob der Einwilligungsknopf vorhanden und anklickbar ist ..."
-        )
+        logger.info("Checking if the 'accept' button is present ...")
 
-        # `consent_button_clickable()` ist eine sogenannte "Erwartung" (Expectation) für Selenium.
-        # Die Funktion prüft, ob der Akzeptieren-Knopf im Shadow DOM vorhanden und anklickbar ist.
-        # WebDriverWait.until() verwendet sie, um sicherzustellen, dass der Button
-        # vorhanden ist, bevor darauf geklickt wird.
+        # `consent_button_clickable()` is a so-called expected condition in Selenium.
+        # The function checks, if the 'accept' button is present.
+        # WebDriverWait.until() uses the function to make sure it's clickable
+        # before clicking it.
         def consent_button_clickable(_driver) -> bool | WebElement:
             try:
                 # Der Akzeptieren-Knopf hat die ID "accept"
@@ -93,7 +93,7 @@ def accept_cookies():
         save_screenshot()
 
     except Exception as e:
-        logger.error(f"Fehler beim Annehmen der Cookies: {e}")
+        logger.error(f"Error accepting cookies: {e}")
 
 
 def select_product_size(size: str | int) -> bool:
@@ -105,16 +105,16 @@ def select_product_size(size: str | int) -> bool:
         )
         size_element.click()
         save_screenshot()
-        logger.info(f"Produktgröße '{size}' erfolgreich ausgewählt.")
+        logger.info(f"Product size '{size}' successfully selected.")
         return True
     except Exception as e:
-        logger.error(f"Fehler beim Auswählen der Produktgröße: {e}")
+        logger.error(f"Error selecting product size: {e}")
     return False
 
 
 def get_price() -> float | None:
     try:
-        logger.info("Produktpreis ermitteln ...")
+        logger.info("Fetching prize ...")
         price_element = driver.find_element(
             By.CSS_SELECTOR,
             "div#visualVariantFilter span.oopStage-variantThumbnailsFromPrice",
@@ -123,10 +123,10 @@ def get_price() -> float | None:
         # Euro-Zeichen entfernen und Komma in Punkt umwandeln,
         # anschließend den Preis in einen Float konvertieren.
         price = float(price.replace("€", "").replace(",", ".").strip())
-        logger.info(f"Preis: {price} €")
+        logger.info(f"Prize: {price} €")
         return price
     except Exception as e:
-        logger.error(f"Fehler beim Ermitteln des Preises: {e}")
+        logger.error(f"Error fetching prize: {e}")
         return None
 
 
@@ -137,7 +137,7 @@ def send_email(subject: str, body: str) -> None:
     smtp_server = os.getenv("smtp_server")
     smtp_port = os.getenv("smtp_port")
     if not all([sender, recipient, password, smtp_server, smtp_port]):
-        logger.error("E-Mail-Konfiguration nicht vollständig.")
+        logger.error("Email configuration is incomplete.")
         return
     try:
         context = ssl.create_default_context()
@@ -149,9 +149,9 @@ def send_email(subject: str, body: str) -> None:
             msg["From"] = sender
             msg["To"] = recipient
             server.send_message(msg)
-            logger.info(f"E-Mail erfolgreich an {recipient} gesendet.")
+            logger.info(f"Email successfully sent to {recipient}.")
     except Exception as e:
-        logger.error(f"Fehler beim Senden der E-Mail: {e}")
+        logger.error(f"Error sending mail: {e}")
 
 
 driver = None
@@ -174,7 +174,7 @@ def job():
     accept_cookies()
     available = select_product_size(size)
     if not available:
-        logger.warning(f"Produktgröße '{size}' ist nicht verfügbar.")
+        logger.warning(f"Size '{size}' is not available.")
     else:
         price = get_price()
         if price is not None:
@@ -182,20 +182,20 @@ def job():
             my_limit_formatted = f"{my_limit:.2f}".replace(".", ",")
             if price < my_limit:
                 logger.info(
-                    f"Preis {price} liegt unter dem Limit {my_limit_formatted} €. E-Mail wird gesendet ..."
+                    f"Prize {price} is below limit of {my_limit_formatted} €. Sending email ..."
                 )
                 send_email(
-                    f"Preisalarm für {product}",
-                    f"Der Preise für {product} in Größe {size} liegt aktuell bei {price_formatted} € "
-                    f"und damit unter deinem Limit von {my_limit_formatted} €.\n\n"
-                    f"Hier klicken, um zu shoppen: {driver.current_url}",
+                    f"Prize alert for {product}",
+                    f"The prize for {product} in size {size} currently is {price_formatted} € "
+                    f"which is below your limit of {my_limit_formatted} €.\n\n"
+                    f"Click to buy: {driver.current_url}",
                 )
             else:
                 logger.info(
-                    f"{price_formatted} € liegt über dem Limit {my_limit_formatted} €. Keine Mail verschickt."
+                    f"{price_formatted} € is above the limit of {my_limit_formatted} €. No email sent."
                 )
         else:
-            logger.error("Produktpreis konnte nicht ermittelt werden.")
+            logger.error("Could not fetch prize of product.")
     close_driver()
 
 
@@ -204,10 +204,10 @@ def main():
     global save_screenshots
     save_screenshots = os.getenv("save_screenshots", "False").lower() == "true"
     interval = float(os.getenv("interval", 300))
-    logger.info(f"Job wird alle {interval:.1f} Sekunden ausgeführt.")
+    logger.info(f"Job will be executed every {interval:.1f} seconds.")
     while True:
         job()
-        logger.info(f"{interval:.1f} Sekunden bis zum nächsten Job warten ...")
+        logger.info(f"Waiting {interval:.1f} seconds until next execution of job ...")
         time.sleep(interval)
 
 
