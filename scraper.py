@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.expected_conditions import (
@@ -10,7 +9,6 @@ from selenium.webdriver.support.expected_conditions import (
     element_to_be_clickable,
 )
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.keys import Keys
 import logging
 import os
 from dotenv import load_dotenv
@@ -124,8 +122,6 @@ def get_price() -> float | None:
             "div#visualVariantFilter span.oopStage-variantThumbnailsFromPrice",
         )
         price = price_element.text
-        # Euro-Zeichen entfernen und Komma in Punkt umwandeln,
-        # anschließend den Preis in einen Float konvertieren.
         price = float(price.replace("€", "").replace(",", ".").strip())
         logger.info(f"Prize: {price} €")
         return price
