@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 dotenv = "*"
 selenium = "*"
+pyyaml = "*"
 
 [dev-packages]
 

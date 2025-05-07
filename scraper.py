@@ -18,9 +18,8 @@ import smtplib
 from email.message import EmailMessage
 import ssl
 import time
+import yaml
 
-
-# Logging konfigurieren
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s (%(filename)s:%(lineno)d) %(levelname)s - %(message)s ",
@@ -158,13 +157,18 @@ driver = None
 save_screenshots = False
 
 
-def job():
+def job(config_file: str = "config.yaml"):
     global driver, save_screenshots
-    # Eigenschaften des heißbegehrten Produkts festlegen
-    product = os.getenv("product", "Skechers Elite Flex Corriedale 78803 CCL Grey")
-    size = os.getenv("size", "44")
-    my_limit = float(os.getenv("limit", 100))
-    url = os.getenv("url", "https://www.idealo.de/preisvergleich/OffersOfProduct/200671888_-elite-flex-corriedale-78803-ccl-grey-skechers.html")
+    with open(config_file, "r", encoding="utf-8") as file:
+        config = yaml.safe_load(file)
+
+    product = config.get("product", "Skechers Elite Flex Corriedale 78803 CCL Grey")
+    size = config.get("size", "44")
+    my_limit = float(config.get("limit", 100))
+    url = config.get(
+        "url",
+        "https://www.idealo.de/preisvergleich/OffersOfProduct/200671888_-elite-flex-corriedale-78803-ccl-grey-skechers.html",
+    )
 
     firefox_options = webdriver.FirefoxOptions()
     firefox_options.add_argument("--headless")
@@ -205,10 +209,16 @@ def main():
     save_screenshots = os.getenv("save_screenshots", "False").lower() == "true"
     interval = float(os.getenv("interval", 300))
     logger.info(f"Job will be executed every {interval:.1f} seconds.")
-    while True:
-        job()
-        logger.info(f"Waiting {interval:.1f} seconds until next execution of job ...")
-        time.sleep(interval)
+    config_file = sys.argv[1] if len(sys.argv) > 1 else "config.yaml"
+    if not os.path.exists(config_file):
+        logger.error(f"Config file '{config_file}' does not exist.")
+        return 1
+    if not os.path.isfile(config_file):
+        logger.error(f"Config file '{config_file}' is not a file.")
+        return 2
+    if not os.access(config_file, os.R_OK):
+        logger.error(f"Config file '{config_file}' is not readable.")
+        return 3
 
 
 if __name__ == "__main__":
