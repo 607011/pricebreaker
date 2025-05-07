@@ -78,17 +78,9 @@ def accept_cookies():
         # The function checks, if the 'accept' button is present.
         # WebDriverWait.until() uses the function to make sure it's clickable
         # before clicking it.
-        def consent_button_clickable(_driver) -> bool | WebElement:
-            try:
-                # Der Akzeptieren-Knopf hat die ID "accept"
-                element = root.find_element(By.ID, "accept")
-                return (
-                    element
-                    if element.is_displayed() and element.is_enabled()
-                    else False
-                )
-            except NoSuchElementException:
-                return False
+        def consent_button_clickable(_driver: WebDriver) -> WebElement | None:
+            element = root.find_element(By.ID, "accept")
+            return element if element.is_displayed() and element.is_enabled() else None
 
         consent_button = WebDriverWait(driver, 10).until(consent_button_clickable)
         consent_button.click()
