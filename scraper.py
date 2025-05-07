@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 import smtplib
 from email.message import EmailMessage
 import ssl
+import sys
 import time
 import yaml
 
@@ -50,13 +51,17 @@ def open_website(url: str):
         save_screenshot()
     except Exception as e:
         logger.error(f"Error opening the web page: {e}")
-        close_driver()
+        shutdown()
         raise
 
 
-def close_driver():
-    logger.info("Closing Firefox driver ...")
-    driver.quit()
+def shutdown():
+    try:
+        if driver.service.process and driver.service.process.poll() is None:
+            logger.info("Closing browser driver ...")
+            driver.quit()
+    except Exception as e:
+        logger.warning(f"Error while closing the browser driver: {e}")
 
 
 def accept_cookies():
@@ -200,10 +205,10 @@ def job(config_file: str = "config.yaml"):
                 )
         else:
             logger.error("Could not fetch prize of product.")
-    close_driver()
+    shutdown()
 
 
-def main():
+def main() -> int:
     load_dotenv()
     global save_screenshots
     save_screenshots = os.getenv("save_screenshots", "False").lower() == "true"
@@ -219,7 +224,19 @@ def main():
     if not os.access(config_file, os.R_OK):
         logger.error(f"Config file '{config_file}' is not readable.")
         return 3
+    try:
+        while True:
+            job()
+            logger.info(
+                f"Waiting {interval:.1f} seconds until next execution of job ..."
+            )
+            time.sleep(interval)
+    except KeyboardInterrupt:
+        logger.info("Execution interrupted by user. Exiting gracefully ...")
+        if driver:
+            shutdown()
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
