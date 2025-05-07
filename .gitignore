@@ -1,3 +1,5 @@
 .env
 Pipfile.lock
 screenshots/
+.DS_Store
+
