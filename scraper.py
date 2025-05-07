@@ -65,7 +65,7 @@ def shutdown():
 def accept_cookies():
     try:
         logger.info("Waiting for the cookie consent banner ...")
-        # The cookie consent banner lives in a shadow DOM with the ID "usercentrics-cmp-ui"
+        # The cookie consent banner lives in a shadow DOM and has the ID "usercentrics-cmp-ui"
         host = WebDriverWait(driver, 10).until(
             presence_of_element_located((By.ID, "usercentrics-cmp-ui"))
         )
